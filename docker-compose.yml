@@ -1,26 +1,28 @@
+# compose.ymlの文法バージョンを定義
 version: '3.9'
 
+# 各サービス（コンテナ）を定義
 services:
-  django:
-      build: ./Docker/Django
-      command: uwsgi --socket :8000 --module project.wsgi --py-autoreload 1 --logto /tmp/mylog.log
-      volumes: 
-        - ./src:/code
+  django: #サービス名
+      build: ./Docker/Django #Dockerfileから起動。Dockerfileの相対ファイルパスを指定
+      command: uwsgi --socket :8000 --module app.wsgi --py-autoreload 1 --logto /tmp/mylog.log #コンテナ起動時に実行するコマンド
+      volumes: #ホストOSのフォルダをdockerコンテナ内のフォルダに割当
+        - ./src:/code # これだと、カレントディレクトリ内のsrcディレクトリ＝docker内の/codeディレクトリという形になる
         - ./static:/static
-      expose:
+      expose: #docker内でのみ開放されるポートの設定。docker内の他のコンテナからのみアクセス可。ホストOSからはアクセス不可。
         - "8000"
       depends_on:
         db:
-          # dbのヘルスチェックが終わってからappを起動させる
+          # dbのヘルスチェックが終わってからdjangoを起動させる
           condition: service_healthy
           
   db:
-      image: mysql:8.0
-      platform: linux/amd64
+      image: mysql:8.0 # イメージから起動
+      platform: linux/amd64 #サービスが実行されるべきプラットフォーム（オペレーティングシステムとアーキテクチャ）を指定
       command: mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
       ports:
-        - "3306:3306"
-      environment:
+        - "3306:3306" # ホストのポート：コンテナのポート
+      environment: # コンテナ内で利用する環境変数の定義
         MYSQL_ROOT_PASSWORD: root
         MYSQL_DATABASE: chapter
         MYSQL_USER: user
@@ -42,7 +44,7 @@ services:
         # ヘルスチェックが失敗しても無視する時間は30秒
         start_period: 30s
 
-  nginx:
+  nginx: # イメージから起動
       image: nginx:1.24.0
       ports:
         - "80:80"
