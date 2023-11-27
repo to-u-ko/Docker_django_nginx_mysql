@@ -1,2 +1,2 @@
-# chapter
-チャプター作成アプリ
+# django-nginx-mysql構成 
+
